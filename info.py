@@ -213,11 +213,9 @@ class InfoModule:
             reply_to=event.message_id if not event.from_me else None)
     
     def cmd_stop(self, event, args):
-        # Останавливаем анимацию статуса
         if hasattr(self.bot, 'animation_module'):
             self.bot.animation_module.stop()
         
-        # Останавливаем автолайк
         self.bot.auto_like_enabled = False
         self.bot.auto_like_targets.clear()
         
