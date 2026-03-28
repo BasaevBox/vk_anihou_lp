@@ -46,3 +46,9 @@
 ```bash
 git clone https://github.com/BasaevBox/vk_anihou_lp.git
 cd vk_anihou_lp
+```
+### 2. Установка зависимостей
+
+```bash
+pip install vk_api yt-dlp requests
+```
