@@ -54,4 +54,4 @@ pip install vk_api yt-dlp requests
 ```
 
 ### 3. Настройка
-1. Откройте файл #config.py#
+1. Откройте файл config.py
