@@ -12,8 +12,6 @@
 
 ---
 
-<div align="center">
-
 # ❤️ Социальные сети разработчика
 vk - https://vk.com/anihou
 
