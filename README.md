@@ -1,10 +1,11 @@
-VK Anime LP Bot v5.0
 <div align="center">
-https://img.shields.io/badge/python-3.7+-blue.svg
-https://img.shields.io/badge/VK%2520API-LongPoll-green.svg
-https://img.shields.io/badge/license-MIT-orange.svg
-https://img.shields.io/badge/version-5.0-red.svg
 
-Многофункциональный бот для ВКонтакте с модульной архитектурой
+# 🎌 VK Anime LP Bot v5.0
+
+**Мощный модульный LongPoll бот для VK** с аниме-артами, RP-командами, кастомными командами и множеством развлечений.
+
+![Python](https://img.shields.io/badge/Python-3.9%2B-blue?style=for-the-badge&logo=python)
+![VK API](https://img.shields.io/badge/VK_API-LongPoll-5181B8?style=for-the-badge&logo=vk)
+![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
 
 </div>
