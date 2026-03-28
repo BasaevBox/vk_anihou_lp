@@ -52,3 +52,6 @@ cd vk_anihou_lp
 ```bash
 pip install vk_api yt-dlp requests
 ```
+
+### 3. Настройка
+1. Откройте файл #config.py#
