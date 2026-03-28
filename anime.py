@@ -2,7 +2,6 @@
 ╔══════════════════════════════════════════════════════════════════════════════╗
 ║                         ANIME ART MODULE v4.0                                ║
 ║                    Модуль для работы с VK группами                           ║
-║                    Берём арты из VK сообществ                                ║
 ╚══════════════════════════════════════════════════════════════════════════════╝
 """
 import random
@@ -24,7 +23,6 @@ class AnimeAPI:
             -101072212
         ]
         
-        # Категории для совместимости
         self.sfw_categories = [
             'waifu', 'neko', 'shinobu', 'megumin', 'bully', 'cuddle', 
             'cry', 'hug', 'awoo', 'kiss', 'lick', 'pat', 'smug', 'bonk',
@@ -37,7 +35,6 @@ class AnimeAPI:
             'waifu', 'neko', 'trap', 'blowjob'
         ]
         
-        # Русские названия
         self.category_names_ru = {
             'waifu': 'Вайфу',
             'neko': 'Неко (кошкодевочка)',
@@ -75,37 +72,24 @@ class AnimeAPI:
         }
 
     def set_nsfw_mode(self, enabled: bool):
-        """Установить режим 18+"""
         self.nsfw_mode = enabled
 
     def get_random_group(self) -> int:
-        """Получить случайную группу в зависимости от режима"""
         groups = self.nsfw_groups if self.nsfw_mode else self.sfw_groups
         if not groups:
             raise ValueError("Не добавлены группы! Добавьте ID групп в anime.py")
         return random.choice(groups)
 
     def get_random_attachment(self, vk_api) -> Optional[str]:
-        """
-        Получить случайное фото из VK групп
-        
-        Args:
-            vk_api: Экземпляр VK API
-        
-        Returns:
-            Строка в формате "photo-owner_id_photo_id" или None
-        """
         try:
             group_id = self.get_random_group()
             
-            # Получаем записи со стены группы
             wall = vk_api.wall.get(
                 owner_id=group_id,
-                count=50,  # Получаем последние 50 записей
+                count=50,
                 filter='owner'
             )
             
-            # Собираем все фото из записей
             photos = []
             for post in wall['items']:
                 if 'attachments' in post:
@@ -121,10 +105,8 @@ class AnimeAPI:
             if not photos:
                 return None
             
-            # Выбираем случайное фото
             selected = random.choice(photos)
             
-            # Формируем строку для вложения
             if selected['access_key']:
                 return f"photo{selected['owner_id']}_{selected['id']}_{selected['access_key']}"
             else:
@@ -135,22 +117,18 @@ class AnimeAPI:
             return None
 
     def get_random_any(self) -> Optional[str]:
-        """Получить случайное изображение (для совместимости)"""
-        return None  # Теперь используем get_random_attachment
+        return None  
 
     def get_categories(self) -> Dict[str, List[str]]:
-        """Получить список доступных категорий"""
         return {
             'sfw': self.sfw_categories,
             'nsfw': self.nsfw_categories
         }
 
     def get_category_name_ru(self, category: str) -> str:
-        """Получить русское название категории"""
         return self.category_names_ru.get(category, category.capitalize())
 
     def get_available_categories_text(self) -> str:
-        """Получить текст со списком доступных категорий"""
         if self.nsfw_mode:
             categories = self.nsfw_categories
             mode_text = "🔞 18+ РЕЖИМ ВКЛЮЧЕН"
@@ -160,7 +138,6 @@ class AnimeAPI:
         
         lines = [f"🎨 {mode_text}\n"]
         
-        # Группируем по 4 в строку
         row = []
         for i, cat in enumerate(categories, 1):
             row.append(f"• {cat}")
@@ -174,7 +151,6 @@ class AnimeAPI:
         return "\n".join(lines)
 
     def get_info_text(self) -> str:
-        """Получить информационное сообщение"""
         sfw_count = len(self.sfw_groups)
         nsfw_count = len(self.nsfw_groups)
         
@@ -194,8 +170,6 @@ class AnimeAPI:
 !аниме waifu - арт вайфу
 !аниме neko - арт неко"""
 
-
-# ==================== ТЕСТ ====================
 if __name__ == "__main__":
     print("🧪 Тестирование модуля anime...")
     api = AnimeAPI()
