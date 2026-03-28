@@ -5,7 +5,7 @@
 """
 
 CONFIG = {
-    "TOKEN": "vk1.a.XVXdRO8AKLOkLipN-Hr4MMMKeraxCRBikQeYNe_Kq4i4-VeSuz7CVyApTfPHsvnMfwZq3PW8_WDPlDEuC2xgJRrs-fpZgFkQ-K9MmrjT9CLPexBktizMTa_fX0Y-d6bJvBhjcvLZprmfan4hnR7CdRZqKgS6cOw7PwITAdMiYNnhFc4FDPIH913FfQjAiQcsmBkCIqhY6QgroG0Sy1jhQw",
+    "TOKEN": "токен страницы вк",
     "COMMAND_PREFIX": "!",
     "STATUS_UPDATE_INTERVAL": 30,
     "AUTO_LIKE_CHECK_INTERVAL": 30,
