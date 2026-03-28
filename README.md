@@ -44,5 +44,5 @@
 ### 1. Клонирование репозитория
 
 ```bash
-https://github.com/BasaevBox/vk_anihou_lp.git
+git clone https://github.com/BasaevBox/vk_anihou_lp.git
 cd vk_anihou_lp
