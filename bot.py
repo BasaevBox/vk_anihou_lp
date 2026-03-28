@@ -17,7 +17,6 @@ from collections import defaultdict
 from config import CONFIG
 from utils import log, Colors
 
-# Импорт модулей
 try:
     from anime import AnimeAPI
     ANIME_MODULE_AVAILABLE = True
@@ -51,12 +50,10 @@ class VKBot:
         self.command_history = []
         self.commands: Dict[str, callable] = {}
         
-        # Система доверенных пользователей
         self.trusted_file = "trusted_users.json"
         self.trusted_users: Set[int] = set()
         self.load_trusted_users()
         
-        # Инициализация модулей
         self.animation_module = AnimationModule(self)
         self.qr_module = QRModule(self)
         self.blacklist_module = BlacklistModule(self)
@@ -66,21 +63,17 @@ class VKBot:
         self.info_module = InfoModule(self)
         self.youtube_module = YouTubeModule(self)
         
-        # Регистрация команд модулей
         self._register_all_commands()
         
-        # Регистрация команд доверия
         self.commands["дов"] = self.cmd_trust
         self.commands["trust"] = self.cmd_trust
         
-        # Аниме команда
         if ANIME_MODULE_AVAILABLE:
             self.commands["аниме"] = self.cmd_anime
         
         self.init_vk()
     
     def load_trusted_users(self):
-        """Загружает список доверенных пользователей из JSON файла"""
         try:
             if os.path.exists(self.trusted_file):
                 with open(self.trusted_file, 'r', encoding='utf-8') as f:
@@ -89,7 +82,6 @@ class VKBot:
                 log(f"Загружено {len(self.trusted_users)} доверенных пользователей", "SUCCESS")
             else:
                 self.trusted_users = set()
-                # Добавляем владельца бота как доверенного по умолчанию
                 if self.user_id:
                     self.trusted_users.add(self.user_id)
                     self.save_trusted_users()
@@ -99,7 +91,6 @@ class VKBot:
             self.trusted_users = set()
     
     def save_trusted_users(self):
-        """Сохраняет список доверенных пользователей в JSON файл"""
         try:
             data = {
                 "trusted_users": list(self.trusted_users),
@@ -112,16 +103,13 @@ class VKBot:
             log(f"Ошибка сохранения доверенных пользователей: {e}", "ERROR")
     
     def is_trusted(self, user_id: int) -> bool:
-        """Проверяет, является ли пользователь доверенным"""
         return user_id in self.trusted_users or user_id == self.user_id
     
     def cmd_trust(self, event, args):
-        """Управление доверенными пользователями: !дов + [id/ссылка] или !дов - [id/ссылка]"""
         if event.from_me:
             return
         
         if not args:
-            # Показываем список доверенных
             if self.trusted_users:
                 trusted_list = "\n".join([f"• [id{uid}|Пользователь]" for uid in sorted(self.trusted_users)])
                 self.bot.send_message(event.peer_id, 
@@ -134,8 +122,7 @@ class VKBot:
             return
         
         action = args[0].lower()
-        
-        # Проверяем, что только админ может управлять доверенными
+    
         if event.user_id != self.user_id:
             self.send_message(event.peer_id, 
                 "❌ Только владелец бота может управлять списком доверенных пользователей!", 
@@ -220,11 +207,9 @@ class VKBot:
     def parse_user_id(self, user_input: str) -> Optional[int]:
         """Парсит ID пользователя из ссылки или числа"""
         try:
-            # Если просто число
             if user_input.lstrip('-').isdigit():
                 return int(user_input)
             
-            # Если ссылка
             user_input = user_input.replace("https://", "").replace("http://", "")
             user_input = user_input.replace("vk.com/", "").replace("m.vk.com/", "")
             user_input = user_input.replace("vkontakte.ru/", "")
@@ -232,7 +217,6 @@ class VKBot:
             if user_input.startswith("id"):
                 return int(user_input[2:])
             
-            # Пробуем через resolveScreenName
             try:
                 response = self.vk.utils.resolveScreenName(screen_name=user_input)
                 if response and response["type"] == "user":
@@ -264,7 +248,6 @@ class VKBot:
             self.user_id = self.user_info["id"]
             CONFIG["ADMIN_ID"] = self.user_id
             
-            # Добавляем владельца в доверенные
             if not self.trusted_users:
                 self.trusted_users.add(self.user_id)
                 self.save_trusted_users()
@@ -310,7 +293,6 @@ class VKBot:
             user_info = self.vk.users.get(user_ids=from_id)[0]
             user_name = f"{user_info['first_name']} {user_info['last_name']}"
             
-            # Отмечаем в логе статус доверия
             trusted_status = "✅ Доверенный" if self.is_trusted(from_id) else "❌ НЕ доверенный"
             
             log_msg = (
@@ -335,23 +317,19 @@ class VKBot:
             log(f"Ошибка логирования: {e}", "ERROR")
 
     def cmd_anime(self, event, args):
-        """Обработка команды !аниме"""
         if not ANIME_MODULE_AVAILABLE:
             self.send_message(event.peer_id, "❌ Модуль аниме недоступен.", 
                 reply_to=event.message_id if not event.from_me else None)
             return
         
-        # Если нет аргументов - показываем инфо
         if not args:
             info_text = anime_api.get_info_text()
             self.send_message(event.peer_id, info_text,
                 reply_to=event.message_id if not event.from_me else None)
             return
         
-        # Обработка подкоманд
         subcommand = args[0].lower()
         
-        # Включение/выключение NSFW режима
         if subcommand == "nsfw":
             anime_api.set_nsfw_mode(True)
             self.send_message(event.peer_id, 
@@ -370,15 +348,11 @@ class VKBot:
                 reply_to=event.message_id if not event.from_me else None)
             return
         
-        # Показ списка категорий
         if subcommand in ["категории", "categories", "список", "list", "инфо", "info"]:
             categories_text = anime_api.get_available_categories_text()
             self.send_message(event.peer_id, categories_text,
                 reply_to=event.message_id if not event.from_me else None)
             return
-        
-        # Генерация арта
-        # Показываем предупреждение о загрузке
         mode_text = "🔞 (18+ режим)" if anime_api.nsfw_mode else "👶 (обычный режим)"
         self.send_message(event.peer_id, 
             f"⏳ 𝗚𝗘𝗡𝗘𝗥𝗔𝗧𝗦𝗜𝗬 𝗔𝗥𝗧𝗔...\n\n"
@@ -387,11 +361,9 @@ class VKBot:
             reply_to=event.message_id if not event.from_me else None)
         
         try:
-            # Получаем случайное фото из VK групп
             attachment = anime_api.get_random_attachment(self.vk)
             
             if attachment:
-                # Определяем категорию (для красоты)
                 category = random.choice(anime_api.sfw_categories if not anime_api.nsfw_mode else anime_api.nsfw_categories)
                 category_name = anime_api.get_category_name_ru(category)
                 
@@ -466,10 +438,6 @@ class VKBot:
         
         command = parts[0].lower()
         args = parts[1:] if len(parts) > 1 else []
-        
-        # Проверка на доверенного пользователя
-        # Исключение: команда !дов доступна всем (для запроса списка) 
-        # но добавление/удаление только для админа (проверка внутри команды)
         if command not in ["дов", "trust"]:
             if not self.is_trusted(event.user_id):
                 self.send_message(event.peer_id, 
