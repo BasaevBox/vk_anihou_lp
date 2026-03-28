@@ -38,3 +38,11 @@
 - `!пинг`, `!время`
 
 ---
+
+## 🚀 Быстрый старт
+
+### 1. Клонирование репозитория
+
+```bash
+git clone https://github.com/yourusername/vk-anime-lp-bot.git
+cd vk-anime-lp-bot
