@@ -55,3 +55,4 @@ pip install vk_api yt-dlp requests
 
 ### 3. Настройка
 1. Откройте файл config.py
+2. Вставьте ваш VK-токен (с правами messages, wall, status, friends, video, docs, photos)
