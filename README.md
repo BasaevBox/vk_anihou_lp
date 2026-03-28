@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🎌 VK Anime LP Bot v5.0
+# 🎌 VK AniHou LP Bot v5.0
 
 **Мощный модульный LongPoll бот для VK** с аниме-артами, RP-командами, кастомными командами и множеством развлечений.
 
