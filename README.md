@@ -70,7 +70,7 @@ CONFIG = {
 
 ## 📁 Структура проекта
 ```
-vk-anime-lp-bot/
+vk_anihou_lp/
 ├── bot.py                      # Главный файл бота
 ├── config.py                   # Конфигурация и анимации
 ├── custom_commands.py          # Система кастомных команд
@@ -87,3 +87,5 @@ vk-anime-lp-bot/
 ├── custom_commands.json        # Сохранённые кастомные команды
 └── downloads/                  # Папка для временных видео
 ```
+### 🎨 Доступные анимации статуса
+<div align="center">
