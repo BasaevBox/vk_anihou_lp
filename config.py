@@ -5,7 +5,7 @@
 """
 
 CONFIG = {
-    "TOKEN": "токен страницы вк",
+    "TOKEN": "ТОКЕН ВК АПИ",
     "COMMAND_PREFIX": "!",
     "STATUS_UPDATE_INTERVAL": 30,
     "AUTO_LIKE_CHECK_INTERVAL": 30,

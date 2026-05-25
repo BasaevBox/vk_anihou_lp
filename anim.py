@@ -111,4 +111,4 @@ class AnimationModule:
     
     def stop(self):
         self.auto_status_enabled = False
-        self.status_animation_running = False
+        self.status_animation_running = False 

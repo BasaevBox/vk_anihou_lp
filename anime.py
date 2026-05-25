@@ -16,59 +16,27 @@ class AnimeAPI:
         self.sfw_groups = [
             -89528768,
             -210485938,
+            -80977142,
+            -185445058,
 
         ]
         
         self.nsfw_groups = [
-            -101072212
+            -101072212,
+            -209432422,
         ]
         
         self.sfw_categories = [
-            'waifu', 'neko', 'shinobu', 'megumin', 'bully', 'cuddle', 
-            'cry', 'hug', 'awoo', 'kiss', 'lick', 'pat', 'smug', 'bonk',
-            'yeet', 'blush', 'smile', 'wave', 'highfive', 'handhold',
-            'nom', 'bite', 'glomp', 'slap', 'kill', 'kick', 'happy',
-            'wink', 'poke', 'dance', 'cringe'
+            'low',
         ]
         
         self.nsfw_categories = [
-            'waifu', 'neko', 'trap', 'blowjob'
+            'loli',
         ]
         
         self.category_names_ru = {
-            'waifu': 'Вайфу',
-            'neko': 'Неко (кошкодевочка)',
-            'shinobu': 'Шинобу',
-            'megumin': 'Мегумин',
-            'bully': 'Задирание',
-            'cuddle': 'Обнимашки',
-            'cry': 'Плач',
-            'hug': 'Объятия',
-            'awoo': 'Волчий вой',
-            'kiss': 'Поцелуй',
-            'lick': 'Лизнуть',
-            'pat': 'Погладить',
-            'smug': 'Самодовольный',
-            'bonk': 'Удар',
-            'yeet': 'Бросок',
-            'blush': 'Смущение',
-            'smile': 'Улыбка',
-            'wave': 'Помахать',
-            'highfive': 'Дай пять',
-            'handhold': 'Держаться за руки',
-            'nom': 'Есть',
-            'bite': 'Укусить',
-            'glomp': 'Прыжок на шею',
-            'slap': 'Пощечина',
-            'kill': 'Убить',
-            'kick': 'Пинок',
-            'happy': 'Счастье',
-            'wink': 'Подмигнуть',
-            'poke': 'Ткнуть',
-            'dance': 'Танец',
-            'cringe': 'Кринж',
-            'trap': 'Трап (18+)',
-            'blowjob': 'Минет (18+)'
+            'low': 'обычный',
+            'loli': 'лоли',
         }
 
     def set_nsfw_mode(self, enabled: bool):
@@ -86,7 +54,7 @@ class AnimeAPI:
             
             wall = vk_api.wall.get(
                 owner_id=group_id,
-                count=50,
+                count=999,
                 filter='owner'
             )
             
@@ -121,8 +89,8 @@ class AnimeAPI:
 
     def get_categories(self) -> Dict[str, List[str]]:
         return {
-            'sfw': self.sfw_categories,
-            'nsfw': self.nsfw_categories
+            'лоу': self.sfw_categories,
+            'лоли': self.nsfw_categories
         }
 
     def get_category_name_ru(self, category: str) -> str:
@@ -131,7 +99,7 @@ class AnimeAPI:
     def get_available_categories_text(self) -> str:
         if self.nsfw_mode:
             categories = self.nsfw_categories
-            mode_text = "🔞 18+ РЕЖИМ ВКЛЮЧЕН"
+            mode_text = "🔞 ЛОЛИ РЕЖИМ ВКЛЮЧЕН"
         else:
             categories = self.sfw_categories
             mode_text = "👶 ОБЫЧНЫЙ РЕЖИМ"

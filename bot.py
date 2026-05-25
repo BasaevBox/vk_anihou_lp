@@ -1,6 +1,6 @@
 """
 ╔══════════════════════════════════════════════════════════════════════════════╗
-║                      VK ANIME LP BOT v5.0 MODULAR                            ║
+║                      VK ANIME LP BOT v9.3 MODULAR                            ║
 ║                        копирование файла запрещено                           ║
 ╚══════════════════════════════════════════════════════════════════════════════╝
 """
@@ -33,6 +33,9 @@ from custom_commands import CustomCommandsModule
 from rp import RPModule
 from info import InfoModule
 from youtube import YouTubeModule
+from auto_poster import AutoPosterModule
+from uplp import UplpModule
+from web_admin import WebAdminModule
 
 
 class VKBot:
@@ -42,18 +45,19 @@ class VKBot:
         self.longpoll = None
         self.user_info = None
         self.user_id = None
-        
+        self.start_time = None
+
         self.auto_like_targets: Dict[int, dict] = {}
         self.auto_like_thread = None
         self.auto_like_enabled = False
-        
+
         self.command_history = []
         self.commands: Dict[str, callable] = {}
-        
+
         self.trusted_file = "trusted_users.json"
         self.trusted_users: Set[int] = set()
         self.load_trusted_users()
-        
+
         self.animation_module = AnimationModule(self)
         self.qr_module = QRModule(self)
         self.blacklist_module = BlacklistModule(self)
@@ -62,17 +66,25 @@ class VKBot:
         self.rp_module = RPModule(self)
         self.info_module = InfoModule(self)
         self.youtube_module = YouTubeModule(self)
-        
+        self.auto_poster_module = AutoPosterModule(self)
+        self.uplp_module = UplpModule(self)
+        self.web_admin_module = WebAdminModule(self)
+
         self._register_all_commands()
-        
+
+        # Добавляем команду доверенных
         self.commands["дов"] = self.cmd_trust
         self.commands["trust"] = self.cmd_trust
-        
+
+        # Добавляем команду админки
+        self.commands["админ"] = self.web_admin_module.cmd_admin
+        self.commands["admin"] = self.web_admin_module.cmd_admin
+
         if ANIME_MODULE_AVAILABLE:
             self.commands["аниме"] = self.cmd_anime
-        
+
         self.init_vk()
-    
+
     def load_trusted_users(self):
         try:
             if os.path.exists(self.trusted_file):
@@ -89,7 +101,7 @@ class VKBot:
         except Exception as e:
             log(f"Ошибка загрузки доверенных пользователей: {e}", "ERROR")
             self.trusted_users = set()
-    
+
     def save_trusted_users(self):
         try:
             data = {
@@ -101,65 +113,65 @@ class VKBot:
             log("Список доверенных пользователей сохранен", "SUCCESS")
         except Exception as e:
             log(f"Ошибка сохранения доверенных пользователей: {e}", "ERROR")
-    
+
     def is_trusted(self, user_id: int) -> bool:
         return user_id in self.trusted_users or user_id == self.user_id
-    
+
     def cmd_trust(self, event, args):
         if event.from_me:
             return
-        
+
         if not args:
             if self.trusted_users:
                 trusted_list = "\n".join([f"• [id{uid}|Пользователь]" for uid in sorted(self.trusted_users)])
-                self.bot.send_message(event.peer_id, 
+                self.send_message(event.peer_id, 
                     f"🔒 𝗗𝗢𝗩𝗘𝗥𝗘𝗡𝗡𝗬𝗘 𝗣𝗢𝗟𝗡𝗭𝗢𝗩𝗔𝗧𝗘𝗟𝗜 ({len(self.trusted_users)}):\n\n{trusted_list}", 
                     reply_to=event.message_id if not event.from_me else None)
             else:
-                self.bot.send_message(event.peer_id, 
+                self.send_message(event.peer_id, 
                     "🔒 Список доверенных пользователей пуст", 
                     reply_to=event.message_id if not event.from_me else None)
             return
-        
+
         action = args[0].lower()
-    
+
         if event.user_id != self.user_id:
             self.send_message(event.peer_id, 
                 "❌ Только владелец бота может управлять списком доверенных пользователей!", 
                 reply_to=event.message_id if not event.from_me else None)
             return
-        
+
         if len(args) < 2:
             self.send_message(event.peer_id, 
                 "❌ Использование: !дов + [id или ссылка] - добавить\n!дов - [id или ссылка] - удалить\n!дов - показать список", 
                 reply_to=event.message_id if not event.from_me else None)
             return
-        
+
         target = args[1]
         target_id = self.parse_user_id(target)
-        
+
         if not target_id:
             self.send_message(event.peer_id, 
                 "❌ Не удалось определить ID пользователя. Используйте ссылку или числовой ID", 
                 reply_to=event.message_id if not event.from_me else None)
             return
-        
+
         if action == "+" or action == "add":
             if target_id == self.user_id:
                 self.send_message(event.peer_id, 
                     "👑 Владелец бота всегда в доверенных!", 
                     reply_to=event.message_id if not event.from_me else None)
                 return
-            
+
             if target_id in self.trusted_users:
                 self.send_message(event.peer_id, 
                     f"⚠️ Пользователь [id{target_id}|уже] в доверенных!", 
                     reply_to=event.message_id if not event.from_me else None)
                 return
-            
+
             self.trusted_users.add(target_id)
             self.save_trusted_users()
-            
+
             try:
                 user_info = self.vk.users.get(user_ids=target_id)[0]
                 user_name = f"{user_info['first_name']} {user_info['last_name']}"
@@ -171,23 +183,23 @@ class VKBot:
                 self.send_message(event.peer_id, 
                     f"✅ Пользователь id{target_id} добавлен в доверенные!", 
                     reply_to=event.message_id if not event.from_me else None)
-        
+
         elif action == "-" or action == "remove" or action == "del":
             if target_id == self.user_id:
                 self.send_message(event.peer_id, 
                     "👑 Нельзя удалить владельца бота из доверенных!", 
                     reply_to=event.message_id if not event.from_me else None)
                 return
-            
+
             if target_id not in self.trusted_users:
                 self.send_message(event.peer_id, 
                     f"⚠️ Пользователь id{target_id} не в доверенных!", 
                     reply_to=event.message_id if not event.from_me else None)
                 return
-            
+
             self.trusted_users.discard(target_id)
             self.save_trusted_users()
-            
+
             try:
                 user_info = self.vk.users.get(user_ids=target_id)[0]
                 user_name = f"{user_info['first_name']} {user_info['last_name']}"
@@ -203,27 +215,27 @@ class VKBot:
             self.send_message(event.peer_id, 
                 "❌ Использование: !дов + [id] - добавить\n!дов - [id] - удалить", 
                 reply_to=event.message_id if not event.from_me else None)
-    
+
     def parse_user_id(self, user_input: str) -> Optional[int]:
         """Парсит ID пользователя из ссылки или числа"""
         try:
             if user_input.lstrip('-').isdigit():
                 return int(user_input)
-            
+
             user_input = user_input.replace("https://", "").replace("http://", "")
             user_input = user_input.replace("vk.com/", "").replace("m.vk.com/", "")
             user_input = user_input.replace("vkontakte.ru/", "")
-            
+
             if user_input.startswith("id"):
                 return int(user_input[2:])
-            
+
             try:
                 response = self.vk.utils.resolveScreenName(screen_name=user_input)
                 if response and response["type"] == "user":
                     return response["object_id"]
             except:
                 pass
-            
+
             return None
         except:
             return None
@@ -237,24 +249,27 @@ class VKBot:
         self.rp_module.register_commands()
         self.info_module.register_commands()
         self.youtube_module.register_commands()
+        self.auto_poster_module.register_commands()
+        self.uplp_module.register_commands()
+        self.web_admin_module.register_commands()
 
     def init_vk(self):
         try:
             self.vk_session = vk_api.VkApi(token=CONFIG["TOKEN"])
             self.vk = self.vk_session.get_api()
             self.longpoll = VkLongPoll(self.vk_session)
-            
+
             self.user_info = self.vk.users.get(fields="first_name,last_name,sex")[0]
             self.user_id = self.user_info["id"]
             CONFIG["ADMIN_ID"] = self.user_id
-            
+
             if not self.trusted_users:
                 self.trusted_users.add(self.user_id)
                 self.save_trusted_users()
-            
+
             log(f"Бот авторизован как {self.user_info['first_name']} {self.user_info['last_name']} (ID: {self.user_id})", "SUCCESS")
             self.send_to_favorite("🤖 Бот успешно запущен и готов к работе!\nИспользуй !помощь для списка команд")
-            
+
         except Exception as e:
             log(f"Ошибка инициализации: {e}", "ERROR")
             raise
@@ -270,7 +285,7 @@ class VKBot:
                 params["attachment"] = attachment
             if reply_to:
                 params["reply_to"] = reply_to
-            
+
             self.vk.messages.send(**params)
             return True
         except Exception as e:
@@ -292,9 +307,9 @@ class VKBot:
             timestamp = datetime.now().strftime("%d.%m.%Y %H:%M:%S")
             user_info = self.vk.users.get(user_ids=from_id)[0]
             user_name = f"{user_info['first_name']} {user_info['last_name']}"
-            
+
             trusted_status = "✅ Доверенный" if self.is_trusted(from_id) else "❌ НЕ доверенный"
-            
+
             log_msg = (
                 f"📋 ЛОГ КОМАНДЫ\n"
                 f"⏰ Время: {timestamp}\n"
@@ -304,7 +319,7 @@ class VKBot:
                 f"📎 Аргументы: {' '.join(args) if args else 'нет'}\n"
                 f"🆔 Peer ID: {peer_id}"
             )
-            
+
             self.send_to_favorite(log_msg)
             self.command_history.append({
                 "time": timestamp,
@@ -321,15 +336,15 @@ class VKBot:
             self.send_message(event.peer_id, "❌ Модуль аниме недоступен.", 
                 reply_to=event.message_id if not event.from_me else None)
             return
-        
+
         if not args:
             info_text = anime_api.get_info_text()
             self.send_message(event.peer_id, info_text,
                 reply_to=event.message_id if not event.from_me else None)
             return
-        
+
         subcommand = args[0].lower()
-        
+
         if subcommand == "nsfw":
             anime_api.set_nsfw_mode(True)
             self.send_message(event.peer_id, 
@@ -338,7 +353,7 @@ class VKBot:
                 "👶 Для отключения: !аниме sfw",
                 reply_to=event.message_id if not event.from_me else None)
             return
-        
+
         if subcommand == "sfw":
             anime_api.set_nsfw_mode(False)
             self.send_message(event.peer_id, 
@@ -347,7 +362,7 @@ class VKBot:
                 "🔞 Для включения: !аниме nsfw",
                 reply_to=event.message_id if not event.from_me else None)
             return
-        
+
         if subcommand in ["категории", "categories", "список", "list", "инфо", "info"]:
             categories_text = anime_api.get_available_categories_text()
             self.send_message(event.peer_id, categories_text,
@@ -359,14 +374,14 @@ class VKBot:
             f"🎭 Режим: {mode_text}\n"
             f"📂 Ищем арты в группах...",
             reply_to=event.message_id if not event.from_me else None)
-        
+
         try:
             attachment = anime_api.get_random_attachment(self.vk)
-            
+
             if attachment:
                 category = random.choice(anime_api.sfw_categories if not anime_api.nsfw_mode else anime_api.nsfw_categories)
                 category_name = anime_api.get_category_name_ru(category)
-                
+
                 self.send_message(event.peer_id, 
                     f"🎨 𝗡𝗜𝗠𝗘 𝗔𝗥𝗧\n\n"
                     f"📂 Категория: {category_name}\n"
@@ -377,7 +392,7 @@ class VKBot:
                     "❌ Не удалось найти арты в группах.\n"
                     "⚠️ Проверьте, добавлены ли группы в anime.py",
                     reply_to=event.message_id if not event.from_me else None)
-            
+
         except Exception as e:
             log(f"Ошибка получения аниме: {e}", "ERROR")
             self.send_message(event.peer_id, 
@@ -398,47 +413,49 @@ class VKBot:
                             count=5,
                             filter="owner"
                         )
-                        
+
                         for post in posts["items"]:
                             post_id = post["id"]
-                            
+
                             if post_id > target_info["last_post_id"]:
                                 self.vk.likes.add(
                                     type="post",
                                     owner_id=target_id,
                                     item_id=post_id
                                 )
-                                
+
                                 log(f"Лайк поставлен: {target_id}_{post_id}", "SUCCESS")
                                 target_info["last_post_id"] = post_id
                                 self.send_to_favorite(f"💚 Автолайк: поставлен лайк посту {target_id}_{post_id}")
-                                
+
                                 time.sleep(1)
-                        
+
                     except Exception as e:
                         log(f"Ошибка автолайка для {target_id}: {e}", "ERROR")
-                
+
                 time.sleep(CONFIG["AUTO_LIKE_CHECK_INTERVAL"])
-                
+
             except Exception as e:
                 log(f"Ошибка цикла автолайка: {e}", "ERROR")
                 time.sleep(10)
 
     def process_message(self, event):
         text = event.text.strip()
-        
+
         if not text.startswith(CONFIG["COMMAND_PREFIX"]):
             return
-        
+
         text = text[len(CONFIG["COMMAND_PREFIX"]):]
         parts = text.split()
-        
+
         if not parts:
             return
-        
+
         command = parts[0].lower()
         args = parts[1:] if len(parts) > 1 else []
-        if command not in ["дов", "trust"]:
+
+        # Разрешаем команды доверенных и админку без проверки
+        if command not in ["дов", "trust", "админ", "admin"]:
             if not self.is_trusted(event.user_id):
                 self.send_message(event.peer_id, 
                     "🔒 𝗗𝗢𝗦𝗧𝗨𝗣 𝗭𝗔𝗣𝗥𝗘𝗦𝗛𝗘𝗡!\n\n"
@@ -447,10 +464,10 @@ class VKBot:
                     f"👑 Владелец: [id{self.user_id}|{self.user_info['first_name']} {self.user_info['last_name']}]", 
                     reply_to=event.message_id if not event.from_me else None)
                 return
-        
+
         self.log_command(command, args, event.peer_id, event.user_id)
         log(f"Команда: {command} | Аргументы: {args} | Peer: {event.peer_id} | Доверенный: {self.is_trusted(event.user_id)}", "COMMAND")
-        
+
         if command in self.commands:
             try:
                 self.commands[command](event, args)
@@ -467,16 +484,19 @@ class VKBot:
         log("=" * 60, "INFO")
         log("БОТ ЗАПУЩЕН И ГОТОВ К РАБОТЕ", "SUCCESS")
         log("=" * 60, "INFO")
-        
+
         self.send_to_favorite("🚀 Бот запущен и слушает сообщения...")
-        
+
+        # Запускаем веб-админку
+        self.web_admin_module.start()
+
         while True:
             try:
                 for event in self.longpoll.listen():
                     if event.type == VkEventType.MESSAGE_NEW:
                         if event.text and event.text.startswith(CONFIG["COMMAND_PREFIX"]):
                             self.process_message(event)
-                            
+
             except Exception as e:
                 log(f"Ошибка в главном цикле: {e}", "ERROR")
                 self.send_to_favorite(f"⚠️ Ошибка в работе бота: {str(e)}\nПереподключаюсь...")
@@ -486,13 +506,27 @@ class VKBot:
                 except:
                     pass
 
+    def stop(self):
+        """Остановка всех модулей и Flask сервера"""
+        log("Остановка бота...", "WARNING")
+        self.animation_module.stop()
+        self.auto_poster_module.stop()
+        self.uplp_module.stop()
+        self.web_admin_module.stop()
+        log("Все модули остановлены", "WARNING")
+
 
 if __name__ == "__main__":
+    bot = None
     try:
         bot = VKBot()
         bot.run()
     except KeyboardInterrupt:
         print(f"\n{Colors.WARNING}Бот остановлен пользователем{Colors.ENDC}")
+        if bot:
+            bot.stop()
     except Exception as e:
         log(f"Критическая ошибка: {e}", "ERROR")
+        if bot:
+            bot.stop()
         input("Нажмите Enter для выхода...")
